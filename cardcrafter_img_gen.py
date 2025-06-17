@@ -69,7 +69,8 @@ class CardCrafterImageGenerator:
         self.logger.setLevel(logging.INFO)
 
     def train(self, rank, alpha, batch_size, num_epochs,
-              train_text_encoder=False, using_ampere_gpu=False):
+              train_text_encoder=False, using_ampere_gpu=False,
+              text_encoder_rank=None, text_encoder_alpha=None):
         self.logger.info(
             'Preparing dataset for Yu-Gi-Oh! card image generation...')
 
@@ -153,12 +154,14 @@ class CardCrafterImageGenerator:
         )
         unet.add_adapter(unet_lora_config)
         if train_text_encoder:
+            if text_encoder_rank is None:
+                text_encoder_rank = rank
+            if text_encoder_alpha is None:
+                text_encoder_alpha = alpha
             text_lora_config = LoraConfig(
-                r=rank,
-                lora_alpha=alpha,
+                r=text_encoder_rank, lora_alpha=text_encoder_alpha,
                 init_lora_weights='gaussian',
-                target_modules=['q_proj', 'k_proj', 'v_proj', 'out_proj'],
-            )
+                target_modules=['q_proj', 'k_proj', 'v_proj', 'out_proj'])
             text_encoder.add_adapter(text_lora_config)
         self.logger.info('Added LoRA weights')
 
